@@ -14,7 +14,7 @@ public:
     void processSerial(Stream& serial);
     
     // Process complete command (for routing)
-    void processCommand(const String& command);
+    void processCommand(const String& command, Stream* responseSerial = nullptr);
     
     // Check if data is available
     bool hasData() const { return dataAvailable; }
@@ -30,8 +30,9 @@ private:
     String commandBuffer;
     unsigned long lastCharTime;
     
-    // Mouse state (placeholder for now)
+    // Mouse state
     MouseState currentState;
+    uint8_t autoReleaseButtons;
     bool dataAvailable;
 };
 

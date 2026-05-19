@@ -201,13 +201,13 @@ void SunBoxCommands::routeToKMBox() {
         char c = (char)routingBuffer[i];
         
         // Handle line endings
-        if (c == '\n' || c == '\r' || c == ';') {
+        if (c == '\n' || c == '\r' || c == ';' || c == '!') {
             processedBytes = i + 1;
             if (command.length() > 0) {
-                kmboxInterface->processCommand(command);
+                kmboxInterface->processCommand(command, &serial);
                 command = "";
             }
-            break;
+            // Continue processing remaining commands in buffer
         } else if (c >= 32 && c <= 126) {  // Printable ASCII
             command += c;
         }
@@ -216,7 +216,7 @@ void SunBoxCommands::routeToKMBox() {
     // Handle timeout
     if (processedBytes == 0 && (millis() - lastCharTime > 100)) {
         if (command.length() > 0) {
-            kmboxInterface->processCommand(command);
+            kmboxInterface->processCommand(command, &serial);
         }
         processedBytes = bufferIndex;
     }
@@ -233,9 +233,15 @@ void SunBoxCommands::routeToKMBox() {
 }
 
 bool SunBoxCommands::isKMBoxCommand(const uint8_t* data, size_t len) {
+    // Skip leading whitespace
+    size_t i = 0;
+    while (i < len && (data[i] == '\r' || data[i] == '\n' || data[i] == ' ')) {
+        i++;
+    }
+    
     // Check if it starts with "km."
-    if (len >= 3) {
-        return (data[0] == 'k' && data[1] == 'm' && data[2] == '.');
+    if (len - i >= 3) {
+        return (data[i] == 'k' && data[i+1] == 'm' && data[i+2] == '.');
     }
     return false;
 }
